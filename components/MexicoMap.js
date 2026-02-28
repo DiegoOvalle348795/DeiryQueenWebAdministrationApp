@@ -3,158 +3,199 @@
 import { useEffect, useMemo, useState } from "react";
 import { geoMercator, geoPath } from "d3-geo";
 
-const DEFAULT_GEOJSON_URL =
-	"https://gist.githubusercontent.com/Tlaloc-Es/5c82834e5e4a9019a91123cb11f598c0/raw/709ce9126861ef7a7c7cc4afd6216a6750d4bbe1/mexico.geojson";
+const MAP_PRESETS = {
+  mexico: {
+    url: "https://gist.githubusercontent.com/Tlaloc-Es/5c82834e5e4a9019a91123cb11f598c0/raw/709ce9126861ef7a7c7cc4afd6216a6750d4bbe1/mexico.geojson",
+    nameKeys: ["ENTIDAD", "name", "NOMBRE"],
+    keyKeys: ["CVE_EDO", "id"],
+  },
+  usa: {
+    url: "https://raw.githubusercontent.com/shawnbot/topogram/master/data/us-states.geojson",
+    nameKeys: ["name", "NAME"],
+    keyKeys: ["iso_3166_2", "adm1_code", "id"],
+  },
+  canada: {
+    url: "https://raw.githubusercontent.com/CyperPunk001/Immigration-to-CA-from-RSA/master/canada_provinces.geojson",
+    nameKeys: ["name", "NAME", "province", "Province"],
+    keyKeys: ["id", "code"],
+  },
+  germany: {
+    url: "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/2_bundeslaender/3_mittel.geo.json",
+    nameKeys: ["name", "NAME"],
+    keyKeys: ["id"],
+  },
+  china: {
+    url: "https://raw.githubusercontent.com/echarts/echarts/master/map/json/china.json",
+    nameKeys: ["name", "NAME", "NL_NAME_1"],
+    keyKeys: ["id", "NAME_1"],
+  },
+};
 
-function getStateName(feature) {
-	return (
-		feature?.properties?.ENTIDAD ||
-		feature?.properties?.name ||
-		feature?.properties?.NOMBRE ||
-		"Estado"
-	);
+function getFeatureName(feature, nameKeys) {
+  const p = feature?.properties;
+  if (!p) return "—";
+  for (const key of nameKeys) {
+    if (p[key]) return p[key];
+  }
+  return feature?.id ?? "—";
 }
 
-function getStateKey(feature, idx) {
-	return feature?.properties?.CVE_EDO || feature?.id || `${idx}`;
+function getFeatureKey(feature, idx, keyKeys) {
+  const p = feature?.properties;
+  for (const key of keyKeys) {
+    if (p?.[key] != null) return String(p[key]);
+  }
+  if (feature?.id != null) return String(feature.id);
+  return `${idx}`;
 }
-
-export default function MexicoMap({
-	geojsonUrl = DEFAULT_GEOJSON_URL,
-	onSelect,
+export default function InteractiveMap({
+  country = "mexico",
+  selectedState = null,
+  onSelect,
+  onRegionsReady,
 }) {
-	const [data, setData] = useState(null);
-	const [hovered, setHovered] = useState(null);
-	const [selected, setSelected] = useState(null);
-	const [status, setStatus] = useState("loading"); // loading | ready | error
+  const preset = MAP_PRESETS[country];
+  const nameKeys = preset?.nameKeys ?? ["name", "ENTIDAD", "NOMBRE"];
+  const keyKeys = preset?.keyKeys ?? ["id", "CVE_EDO"];
 
-	useEffect(() => {
-		let isMounted = true;
+  const [data, setData] = useState(null);
+  const [hovered, setHovered] = useState(null);
+  const [status, setStatus] = useState("loading");
 
-		(async () => {
-			try {
-				setStatus("loading");
-				const res = await fetch(geojsonUrl);
-				if (!res.ok) throw new Error(`HTTP ${res.status}`);
-				const json = await res.json();
-				if (!isMounted) return;
-				setData(json);
-				setStatus("ready");
-			} catch (e) {
-				if (!isMounted) return;
-				setStatus("error");
-			}
-		})();
+  // Reset cuando cambia el país
+  useEffect(() => {
+    setData(null);
+    setStatus("loading");
+  }, [country]);
 
-		return () => {
-			isMounted = false;
-		};
-	}, [geojsonUrl]);
+  useEffect(() => {
+    if (!preset?.url) return;
+    let isMounted = true;
 
-	const { pathGenerator, features, width, height } = useMemo(() => {
-		const w = 800;
-		const h = 520;
-		const feats = Array.isArray(data?.features) ? data.features : [];
+    (async () => {
+      try {
+        const res = await fetch(preset.url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        let json = await res.json();
 
-		if (!data) {
-			return {
-				pathGenerator: null,
-				features: [],
-				width: w,
-				height: h,
-			};
-		}
+        // TopoJSON → GeoJSON
+        if (json.type === "Topology" && json.objects) {
+          const obj = Object.values(json.objects)[0];
+          if (obj?.geometries) {
+            json = {
+              type: "FeatureCollection",
+              features: obj.geometries
+                .map((g, i) => ({
+                  type: "Feature",
+                  properties: g.properties || { name: `Region ${i + 1}` },
+                  geometry:
+                    g.type === "Polygon"
+                      ? { type: "Polygon", coordinates: g.coordinates ?? g.arcs }
+                      : g.type === "MultiPolygon"
+                      ? { type: "MultiPolygon", coordinates: g.coordinates ?? [g.arcs] }
+                      : null,
+                }))
+                .filter((f) => f.geometry),
+            };
+          }
+        }
 
-		const projection = geoMercator();
-		// fitSize muta el projection internamente
-		projection.fitSize([w, h], data);
-		const pg = geoPath(projection);
+        if (!isMounted) return;
+        setData(json);
+        setStatus("ready");
 
-		return { pathGenerator: pg, features: feats, width: w, height: h };
-	}, [data]);
+        // Notificar lista de regiones al padre
+        if (onRegionsReady && json.features) {
+          const names = json.features.map((f) => getFeatureName(f, nameKeys)).filter(Boolean);
+          onRegionsReady(names);
+        }
+      } catch {
+        if (!isMounted) return;
+        setStatus("error");
+      }
+    })();
 
-	if (status === "loading") {
-		return (
-			<div className="w-full rounded-xl bg-transparent p-6">
-				<div className="font-semibold">Mapa de México</div>
-				<div className="text-sm text-base-content/70">Cargando…</div>
-			</div>
-		);
-	}
+    return () => { isMounted = false; };
+  }, [preset?.url]);
 
-	if (status === "error") {
-		return (
-			<div className="w-full rounded-xl bg-transparent p-6">
-				<div className="font-semibold">Mapa de México</div>
-				<div className="text-sm text-error">
-					No se pudo cargar el mapa. Revisa tu conexión o la URL del GeoJSON.
-				</div>
-			</div>
-		);
-	}
+  const { pathGenerator, features, width, height } = useMemo(() => {
+    const w = 800;
+    const h = 520;
+    const feats = Array.isArray(data?.features) ? data.features : [];
+    if (!data) return { pathGenerator: null, features: [], width: w, height: h };
 
-	return (
-		<div className="w-full rounded-xl bg-transparent p-4 md:p-6">
-			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-				<div>
-					<div className="font-semibold">Mapa de México</div>
-					<div className="text-sm text-base-content/70">
-						Selecciona tu ubicación.
-					</div>
-				</div>
-				<div className="text-sm">
-					<span className="font-semibold">Seleccionado:</span>{" "}
-					{selected || "—"}
-				</div>
-			</div>
+    const projection = geoMercator().fitSize([w, h], data);
+    const pg = geoPath(projection);
+    return { pathGenerator: pg, features: feats, width: w, height: h };
+  }, [data]);
 
-			<div className="relative">
-				{hovered ? (
-					<div className="absolute left-3 top-3 z-10 rounded-lg bg-black/70 text-white px-3 py-1 text-sm">
-						{hovered}
-					</div>
-				) : null}
+  if (status === "loading") {
+    return (
+      <div className="w-full flex items-center justify-center py-16">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span className="text-white/60 text-sm">Cargando mapa…</span>
+        </div>
+      </div>
+    );
+  }
 
-				<svg
-					viewBox={`0 0 ${width} ${height}`}
-					className="w-full h-auto"
-					role="img"
-					aria-label="Mapa de México por estados"
-				>
-					<rect
-						x="0"
-						y="0"
-						width={width}
-						height={height}
-						fill="transparent"
-					/>
-					<g>
-						{features.map((feature, idx) => {
-							const name = getStateName(feature);
-							const key = getStateKey(feature, idx);
-							const isSelected = selected === name;
+  if (status === "error") {
+    return (
+      <div className="w-full flex items-center justify-center py-16">
+        <span className="text-red-400 text-sm">No se pudo cargar el mapa.</span>
+      </div>
+    );
+  }
 
-							return (
-								<path
-									key={key}
-									d={pathGenerator ? pathGenerator(feature) : ""}
-									fill={isSelected ? "rgba(37, 235, 37, 0.77)" : "rgba(255,255,255,0.35)"}
-									stroke="rgba(0, 0, 0, 0.98)"
-									strokeWidth={0.8}
-									onMouseEnter={() => setHovered(name)}
-									onMouseLeave={() => setHovered(null)}
-									onClick={() => {
-										setSelected(name);
-										onSelect?.(feature?.properties || { name });
-									}}
-									style={{ cursor: "pointer" }}
-								/>
-							);
-						})}
-					</g>
-				</svg>
-			</div>
-		</div>
-	);
+  return (
+    <div className="relative w-full rounded-xl overflow-hidden border-2 border-black/90 bg-slate-100 shadow-lg">
+      {hovered && (
+        <div className="absolute left-3 top-3 z-10 rounded-lg bg-black/85 text-white px-3 py-1.5 text-sm font-medium shadow-md pointer-events-none border border-black/30">
+          {hovered}
+        </div>
+      )}
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Mapa interactivo"
+      >
+        <rect x="0" y="0" width={width} height={height} fill="rgb(241 245 249)" />
+        <g>
+          {features.map((feature, idx) => {
+            const name = getFeatureName(feature, nameKeys);
+            const key = getFeatureKey(feature, idx, keyKeys);
+            const isSelected = selectedState === name;
+            const isHovered = hovered === name;
+
+            return (
+              <path
+                key={key}
+                d={pathGenerator ? pathGenerator(feature) : ""}
+                fill={
+                  isSelected
+                    ? "rgba(250, 200, 0, 0.9)"
+                    : isHovered
+                    ? "rgba(226, 232, 240, 0.95)"
+                    : "rgba(255, 255, 255, 0.9)"
+                }
+                stroke="#000"
+                strokeWidth={1.2}
+                onMouseEnter={() => setHovered(name)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => {
+                  onSelect?.(name, feature?.properties || { name });
+                }}
+                style={{
+                  cursor: "pointer",
+                  transition: "fill 150ms ease",
+                }}
+              />
+            );
+          })}
+        </g>
+      </svg>
+    </div>
+  );
 }
-

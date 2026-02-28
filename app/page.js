@@ -2,15 +2,21 @@ import Image from "next/image";
 import bgDesktop from "@/components/images/background desktop.png";
 import bgMobile from "@/components/images/wallpaper_1080x1920.png";
 import MexicoMap from "@/components/MexicoMap";
+import AnimatedHeader from "@/components/AnimatedHeader";
+import Footer from "@/components/Footer";
+import LocationWizard from "@/components/LocationWizard";
 
 export const metadata = {
-  title: "Elegir Ubicación - Dairy Queen",
+  title: "Analizar zona",
   description: "Selecciona tu ubicación para encontrar tu Dairy Queen más cercano",
 };
 
 export default function Page() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen" id="inicio">
+      <AnimatedHeader activeItem="ubicaciones" />
+      <LocationWizard />
+
       {/* Background solo en la página principal */}
       <div className="fixed inset-0 -z-10">
         <Image
@@ -31,15 +37,18 @@ export default function Page() {
         />
       </div>
 
-      <div className="p-8">
+      <div className="p-8 pt-24 md:pt-28">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold mb-4">Elegir Ubicación</h1>
           <p className="text-base-content/70">
             Página principal - Selecciona tu ubicación
           </p>
 
-          <div className="mt-8">
+          <div className="mt-8" id="ubicaciones">
             <MexicoMap />
+          </div>
+          <div>
+            <Footer/>
           </div>
         </div>
       </div>
