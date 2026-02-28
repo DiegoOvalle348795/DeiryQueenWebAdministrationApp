@@ -149,7 +149,7 @@ export default function InteractiveMap({
   }
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden border-2 border-black/90 bg-slate-100 shadow-lg">
+    <div className="relative w-full rounded-xl overflow-hidden shadow-lg shadow-black/40">
       {hovered && (
         <div className="absolute left-3 top-3 z-10 rounded-lg bg-black/85 text-white px-3 py-1.5 text-sm font-medium shadow-md pointer-events-none border border-black/30">
           {hovered}
@@ -161,7 +161,7 @@ export default function InteractiveMap({
         role="img"
         aria-label="Mapa interactivo"
       >
-        <rect x="0" y="0" width={width} height={height} fill="rgb(241 245 249)" />
+        <rect x="0" y="0" width={width} height={height} fill="transparent" />
         <g>
           {features.map((feature, idx) => {
             const name = getFeatureName(feature, nameKeys);
@@ -177,8 +177,8 @@ export default function InteractiveMap({
                   isSelected
                     ? "rgba(250, 200, 0, 0.9)"
                     : isHovered
-                    ? "rgba(226, 232, 240, 0.95)"
-                    : "rgba(255, 255, 255, 0.9)"
+                    ? "rgb(199, 195, 195)"
+                    : "rgb(255, 255, 255)"
                 }
                 stroke="#000"
                 strokeWidth={1.2}
