@@ -12,9 +12,23 @@ export const metadata = {
 };
 
 export default function Page() {
+  
   return (
+    
     <main className="min-h-screen" id="inicio">
+      
       <AnimatedHeader activeItem="ubicaciones" />
+      <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">.</h1>
+          <p className="text-base-content/70">
+            .
+          </p>
+        </div><div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Elegir Ubicación</h1>
+          <p className="text-base-content/70">
+            Página principal - Selecciona tu ubicación
+          </p>
+        </div>
       <LocationWizard />
 
       {/* Background solo en la página principal */}
@@ -38,18 +52,8 @@ export default function Page() {
       </div>
 
       <div className="p-8 pt-24 md:pt-28">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">Elegir Ubicación</h1>
-          <p className="text-base-content/70">
-            Página principal - Selecciona tu ubicación
-          </p>
-
-          <div className="mt-8" id="ubicaciones">
-            <MexicoMap />
-          </div>
-          <div>
+        <div>
             <Footer/>
-          </div>
         </div>
       </div>
     </main>

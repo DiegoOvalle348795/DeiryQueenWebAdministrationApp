@@ -114,8 +114,8 @@ export default function LocationWizard() {
         {step === 1 && (
           <div className="animate-fade-in">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">¿En qué país estás?</h2>
-              <p className="text-white/60">
+              <h2 className="text-3xl font-bold text-black mb-2">¿En qué país estás?</h2>
+              <p className="text-black/60">
                 {detecting ? "Detectando tu ubicación…" : "Selecciona tu país para continuar"}
               </p>
             </div>
@@ -127,15 +127,15 @@ export default function LocationWizard() {
                   onClick={() => handleCountrySelect(c.key)}
                   className={`group flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all duration-300 text-left
                     ${autoDetected && country === c.key
-                      ? "border-[#fac800] bg-[#fac800]/15 shadow-[0_0_24px_rgba(250,200,0,0.2)]"
-                      : "border-white/15 bg-white/5 hover:border-white/40 hover:bg-white/10"
+                      ? "border-[#069ddf] bg-[#069ddf]/80 shadow-[0_0_24px_rgba(250,200,0,0.2)]"
+                      : "border-white/100 bg-white/80 hover:border-black/40 hover:bg-black/10"
                     }`}
                 >
                   <span className="text-4xl">{c.flag}</span>
                   <div>
-                    <div className="text-white font-semibold">{c.label}</div>
+                    <div className="text-black font-semibold">{c.label}</div>
                     {autoDetected && country === c.key && (
-                      <div className="text-[#fac800] text-xs mt-0.5">Detectado automáticamente</div>
+                      <div className="text-white text-xs mt-0.5">Detectado automáticamente</div>
                     )}
                   </div>
                   <svg
@@ -155,10 +155,10 @@ export default function LocationWizard() {
           <div className="animate-fade-in">
             <div className="text-center mb-6">
               <div className="text-4xl mb-3">{currentCountry?.flag}</div>
-              <h2 className="text-3xl font-bold text-white mb-2">
+              <h2 className="text-3xl font-bold text-black mb-2">
                 Selecciona tu {regionLabel.toLowerCase()}
               </h2>
-              <p className="text-white/60">Haz clic en el mapa o usa el selector</p>
+              <p className="text-black/60">Haz clic en el mapa o usa el selector</p>
             </div>
 
             {/* Mapa */}
@@ -177,7 +177,7 @@ export default function LocationWizard() {
                 <select
                   value={region ?? ""}
                   onChange={handleDropdownChange}
-                  className="w-full appearance-none bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-[#fac800]/60 transition-colors cursor-pointer"
+                  className="w-full appearance-none bg-white/80 backdrop-blur-sm border border-black text-black rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:border-[#fac800]/60 transition-colors cursor-pointer"
                 >
                   <option value="" className="bg-slate-800">— Selecciona un {regionLabel.toLowerCase()} —</option>
                   {regions.map((r) => (
@@ -205,7 +205,7 @@ export default function LocationWizard() {
               </button>
             </div>
 
-            <button onClick={handleBack} className="text-white/40 hover:text-white/70 text-sm transition-colors">
+            <button onClick={handleBack} className="text-black/60 hover:text-black/100 text-sm transition-colors">
               ← Volver
             </button>
           </div>
@@ -215,37 +215,38 @@ export default function LocationWizard() {
         {step === 3 && (
           <div className="animate-fade-in text-center">
             <div className="text-5xl mb-4">{currentCountry?.flag}</div>
-            <h2 className="text-3xl font-bold text-white mb-2">¡Listo!</h2>
-            <p className="text-white/60 mb-8">Tu ubicación seleccionada</p>
+            <h2 className="text-3xl font-bold text-black mb-2">¡Listo!</h2>
+            <p className="text-black/80 mb-8 ">Tu ubicación seleccionada</p>
 
             <div className="inline-flex flex-col gap-3 mb-10 w-full max-w-sm">
-              <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-white/15 bg-white/5">
+              <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-blue/15 bg-white/90">
                 <span className="text-2xl">{currentCountry?.flag}</span>
                 <div className="text-left">
-                  <div className="text-white/50 text-xs uppercase tracking-wider mb-0.5">País</div>
-                  <div className="text-white font-semibold">{currentCountry?.label}</div>
+                  <div className="text-black/90 text-xs uppercase tracking-wider mb-0.5">País</div>
+                  <div className="text-black font-semibold">{currentCountry?.label}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-[#fac800]/40 bg-[#fac800]/10">
+              <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-white/40 bg-white/50">
                 <span className="text-2xl">📍</span>
                 <div className="text-left">
-                  <div className="text-[#fac800]/70 text-xs uppercase tracking-wider mb-0.5">{regionLabel}</div>
-                  <div className="text-white font-semibold">{region}</div>
+                  <div className="text-black/70 text-xs uppercase tracking-wider mb-0.5">{regionLabel}</div>
+                  <div className="text-black font-semibold">{region}</div>
                 </div>
               </div>
-            </div>
-
-            <button
+              <button
               type="button"
               onClick={() => {}}
               className="w-full max-w-sm px-8 py-4 rounded-2xl bg-[#fac800] text-black font-bold text-base shadow-[0_8px_32px_rgba(250,200,0,0.35)] hover:bg-[#e6b800] hover:shadow-[0_8px_40px_rgba(250,200,0,0.5)] transition-all duration-300 active:scale-[0.98]"
             >
               Ver Sucursales
             </button>
+            </div>
+
+            
 
             <div className="mt-6">
-              <button onClick={handleBack} className="text-white/40 hover:text-white/70 text-sm transition-colors">
+              <button onClick={handleBack} className="text-black/60 hover:text-black/100 text-sm transition-colors">
                 ← Cambiar ubicación
               </button>
             </div>
