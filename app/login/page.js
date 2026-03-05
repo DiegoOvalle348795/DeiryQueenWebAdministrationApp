@@ -9,7 +9,7 @@ export default function LoginPage() {
     event.preventDefault();
     // Aquí se integrará la lógica real de autenticación.
   };
-
+////////
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Fondo para desktop */}
