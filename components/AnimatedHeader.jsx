@@ -24,6 +24,8 @@ export default function AnimatedHeader({ activeItem = "ubicaciones" }) {
     { id: "ubicaciones", href: "#ubicaciones", label: "Ubicaciones" },
     { id: "reportes", href: "#reportes", label: "Reportes" },
     { id: "ayuda", href: "#ayuda", label: "Ayuda" },
+    { id: "login", href: "/login", label: "Iniciar sesión" },
+    { id: "register", href: "/register", label: "Registrarse" },
   ];
 
   const linkBase = "text-sm font-medium transition-colors duration-300";
