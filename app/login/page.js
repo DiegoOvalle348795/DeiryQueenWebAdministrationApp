@@ -1,15 +1,39 @@
- "use client";
+"use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
+import config from "@/config";
 import fondoPc from "../../components/images/fondo_2_pc_sin_gemini.png";
 import fondoCel from "../../components/images/fondo_cel_sin_gemini.png";
 
 export default function LoginPage() {
-  const handleSubmit = (event) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Aquí se integrará la lógica real de autenticación.
+    setIsLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl: config.auth.callbackUrl,
+      });
+
+      if (res?.error) {
+        toast.error("Correo o contraseña incorrectos.");
+        return;
+      }
+
+      window.location.href = res?.url || config.auth.callbackUrl;
+    } finally {
+      setIsLoading(false);
+    }
   };
-////////
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Fondo para desktop */}
@@ -45,6 +69,18 @@ export default function LoginPage() {
               Accede al panel de administración de Dairy Queen.
             </p>
 
+            <button
+              type="button"
+              className="btn btn-outline w-full"
+              onClick={() =>
+                signIn("google", { callbackUrl: config.auth.callbackUrl })
+              }
+            >
+              Continuar con Google
+            </button>
+
+            <div className="divider my-4">o</div>
+
             <form className="form-control space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label className="label">
@@ -55,6 +91,8 @@ export default function LoginPage() {
                   className="input input-bordered w-full"
                   placeholder="tucorreo@ejemplo.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -67,11 +105,17 @@ export default function LoginPage() {
                   className="input input-bordered w-full"
                   placeholder="••••••••"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary w-full mt-2">
-                Ingresar
+              <button
+                type="submit"
+                className="btn btn-primary w-full mt-2"
+                disabled={isLoading}
+              >
+                {isLoading ? "Ingresando..." : "Ingresar"}
               </button>
             </form>
 

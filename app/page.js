@@ -20,14 +20,8 @@ export default function Page() {
       <AnimatedHeader activeItem="ubicaciones" />
       <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold mb-4">.</h1>
-          <p className="text-base-content/70">
-            .
-          </p>
-        </div><div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">Elegir Ubicación</h1>
-          <p className="text-base-content/70">
-            Página principal - Selecciona tu ubicación
-          </p>
+          
+          
         </div>
       <LocationWizard />
 

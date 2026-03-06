@@ -17,6 +17,10 @@ const userSchema = mongoose.Schema(
     image: {
       type: String,
     },
+    passwordHash: {
+      type: String,
+      private: true,
+    },
     // Role-based access control
     role: {
       type: String,

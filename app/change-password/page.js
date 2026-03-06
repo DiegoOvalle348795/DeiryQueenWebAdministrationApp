@@ -1,13 +1,42 @@
- "use client";
+"use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
 import fondoPc from "../../components/images/fondo_2_pc_sin_gemini.png";
 import fondoCel from "../../components/images/fondo_cel_sin_gemini.png";
 
 export default function ChangePasswordPage() {
-  const handleSubmit = (event) => {
+  const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Aquí se integrará la lógica real de cambio de contraseña.
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "No se pudo cambiar la contraseña.");
+        return;
+      }
+
+      toast.success("Contraseña actualizada. Inicia sesión.");
+      window.location.href = "/login";
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +84,8 @@ export default function ChangePasswordPage() {
                   className="input input-bordered w-full"
                   placeholder="tucorreo@ejemplo.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -68,6 +99,8 @@ export default function ChangePasswordPage() {
                   placeholder="••••••••"
                   required
                   minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                 />
               </div>
 
@@ -81,11 +114,17 @@ export default function ChangePasswordPage() {
                   placeholder="Repite la contraseña"
                   required
                   minLength={8}
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary w-full mt-2">
-                Guardar contraseña
+              <button
+                type="submit"
+                className="btn btn-primary w-full mt-2"
+                disabled={isLoading}
+              >
+                {isLoading ? "Guardando..." : "Guardar contraseña"}
               </button>
             </form>
 

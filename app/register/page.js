@@ -1,13 +1,58 @@
- "use client";
+"use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
+import config from "@/config";
 import fondoPc from "../../components/images/fondo_2_pc_sin_gemini.png";
 import fondoCel from "../../components/images/fondo_cel_sin_gemini.png";
 
 export default function RegisterPage() {
-  const handleSubmit = (event) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Aquí se integrará la lógica real de registro.
+    if (password !== confirmPassword) {
+      toast.error("Las contraseñas no coinciden.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data?.error || "No se pudo registrar.");
+        return;
+      }
+
+      toast.success("Cuenta creada. Iniciando sesión...");
+      const signInRes = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+        callbackUrl: config.auth.callbackUrl,
+      });
+
+      if (signInRes?.error) {
+        toast.success("Cuenta creada. Ahora inicia sesión.");
+        window.location.href = "/login";
+        return;
+      }
+
+      window.location.href = signInRes?.url || config.auth.callbackUrl;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +100,8 @@ export default function RegisterPage() {
                   className="input input-bordered w-full"
                   placeholder="Nombre y apellidos"
                   required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
@@ -67,6 +114,8 @@ export default function RegisterPage() {
                   className="input input-bordered w-full"
                   placeholder="tucorreo@ejemplo.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -80,6 +129,8 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   required
                   minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
@@ -93,11 +144,17 @@ export default function RegisterPage() {
                   placeholder="Repite la contraseña"
                   required
                   minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary w-full mt-2">
-                Registrarse
+              <button
+                type="submit"
+                className="btn btn-primary w-full mt-2"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creando cuenta..." : "Registrarse"}
               </button>
             </form>
 
